@@ -1,0 +1,4 @@
+router/log.jsonl
+router/log.jsonl.bak
+router/state/
+*.bak-*

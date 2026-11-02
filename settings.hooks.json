@@ -1,0 +1,95 @@
+{
+    "hooks":  {
+                  "SessionStart":  [
+                                       {
+                                           "hooks":  [
+                                                         {
+                                                             "type":  "command",
+                                                             "command":  "powershell.exe",
+                                                             "args":  [
+                                                                          "-NoProfile",
+                                                                          "-ExecutionPolicy",
+                                                                          "Bypass",
+                                                                          "-File",
+                                                                          "{{CLAUDE_HOME}}/router/hooks/session-start.ps1"
+                                                                      ],
+                                                             "timeout":  15
+                                                         }
+                                                     ]
+                                       }
+                                   ],
+                  "UserPromptSubmit":  [
+                                           {
+                                               "hooks":  [
+                                                             {
+                                                                 "type":  "command",
+                                                                 "command":  "powershell.exe",
+                                                                 "args":  [
+                                                                              "-NoProfile",
+                                                                              "-ExecutionPolicy",
+                                                                              "Bypass",
+                                                                              "-File",
+                                                                              "{{CLAUDE_HOME}}/router/hooks/prompt-submit.ps1"
+                                                                          ],
+                                                                 "timeout":  10
+                                                             }
+                                                         ]
+                                           }
+                                       ],
+                  "PreToolUse":  [
+                                     {
+                                         "matcher":  "Agent",
+                                         "hooks":  [
+                                                       {
+                                                           "type":  "command",
+                                                           "command":  "powershell.exe",
+                                                           "args":  [
+                                                                        "-NoProfile",
+                                                                        "-ExecutionPolicy",
+                                                                        "Bypass",
+                                                                        "-File",
+                                                                        "{{CLAUDE_HOME}}/router/hooks/pre-agent.ps1"
+                                                                    ],
+                                                           "timeout":  10
+                                                       }
+                                                   ]
+                                     }
+                                 ],
+                  "SubagentStop":  [
+                                       {
+                                           "hooks":  [
+                                                         {
+                                                             "type":  "command",
+                                                             "command":  "powershell.exe",
+                                                             "args":  [
+                                                                          "-NoProfile",
+                                                                          "-ExecutionPolicy",
+                                                                          "Bypass",
+                                                                          "-File",
+                                                                          "{{CLAUDE_HOME}}/router/hooks/subagent-stop.ps1"
+                                                                      ],
+                                                             "timeout":  20
+                                                         }
+                                                     ]
+                                       }
+                                   ],
+                  "Stop":  [
+                               {
+                                   "hooks":  [
+                                                 {
+                                                     "type":  "command",
+                                                     "command":  "powershell.exe",
+                                                     "args":  [
+                                                                  "-NoProfile",
+                                                                  "-ExecutionPolicy",
+                                                                  "Bypass",
+                                                                  "-File",
+                                                                  "{{CLAUDE_HOME}}/router/hooks/turn-stop.ps1"
+                                                              ],
+                                                     "timeout":  10
+                                                 }
+                                             ]
+                               }
+                           ]
+              }
+}

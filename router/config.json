@@ -1,0 +1,41 @@
+{
+    "_note":  "USD per million tokens. Source: platform.claude.com/docs/en/about-claude/pricing (checked 2026-10-20). Update here if prices change.",
+    "workers":  [
+                    "haiku-scout",
+                    "haiku-worker",
+                    "sonnet-worker",
+                    "roblox-worker"
+                ],
+    "prices":  {
+                   "opus":  {
+                                "input":  4.0,
+                                "cache_write":  5.0,
+                                "cache_read":  0.20,
+                                "output":  20.0
+                            },
+                   "sonnet":  {
+                                  "input":  2.0,
+                                  "cache_write":  2.5,
+                                  "cache_read":  0.10,
+                                  "output":  10.0
+                              },
+                   "haiku":  {
+                                 "input":  0.10,
+                                 "cache_write":  0.125,
+                                 "cache_read":  0.01,
+                                 "output":  0.50,
+                                 "long_threshold":  100000,
+                                 "long":  {
+                                              "input":  0.50,
+                                              "cache_write":  0.625,
+                                              "cache_read":  0.05,
+                                              "output":  2.50
+                                          }
+                             }
+               },
+    "weak_spot":  {
+                      "min_tasks":  3,
+                      "fail_rate":  0.4
+                  },
+    "changelog_path":  ""
+}
