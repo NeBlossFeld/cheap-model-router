@@ -19,6 +19,8 @@ Before every task, Opus decides whether to do it itself or hand it to a cheaper 
 
 You see each decision as a line like `→ Haiku · rename vars in 3 files`, and every task reply ends with a `route:` line.
 
+**When you ask for a model yourself**, Opus follows it and also records what it would have picked on its own: `route: sonnet ✓ · asked sonnet · auto opus`. If both match, nothing changes. If they differ, it's a real override: the routing was wrong for that kind of task, and it can become a learned rule.
+
 ## The workers
 
 | Agent | Model | Can | For |
@@ -38,8 +40,8 @@ Every worker ends with a fixed report (`STATUS`, `CONFIDENCE`, `PARTIAL-WHY`, `U
 
 ## Stats and learning
 
-- **`/route-stats [days]`** shows the share of work per model, partials and escalations, failures per task type, tokens, and both gross and net estimated savings. Net savings subtract the extra Opus cost of briefing and checking.
-- **Learned rules:** when you correct a routing choice, Opus writes a `route-feedback:` line and a hook saves it to `~/.claude/router/feedback.md`. That file is loaded at every session start. The repo ships with 9 rules learned during the first month.
+- **`/route-stats [days]`** shows the share of work per model, partials and escalations, failures per task type, tokens, and both gross and net estimated savings. Net savings subtract the extra Opus cost of briefing and checking. It also lists your model requests and which of them were real overrides.
+- **Learned rules:** when you correct a routing choice, Opus writes a `route-feedback:` line and a hook saves it to `~/.claude/router/feedback.md`. That file is loaded at every session start. The repo ships with 14 rules learned during real use.
 - **Changelog of rules:** set `changelog_path` in `~/.claude/router/config.json` to a `CHANGELOG.md` (e.g. this repo's), and every newly learned rule is appended to it.
 
 ## Requirements

@@ -9,3 +9,8 @@
 - /graphify --update (scripted incremental runs) → haiku-worker; full /graphify builds (community naming) → sonnet-worker, not opus  (2026-10-23)
 - lookups that need judgment across several sources → sonnet-worker; haiku-scout only for single-page extraction, reading known files, and gathering sources without judging them. In a research split, write haiku-scout's DONE WHEN as "sources gathered and extracted", so gathering alone counts as done  (2026-10-23)
 - fake test-data/fixture generators with an exact spec and a substring-check done condition → haiku-worker, not sonnet  (2026-10-31)
+- small build-list items with an exact spec (popups, CSS fixes, exact replacements, renames, version bumps, status updates) → haiku-worker, one item per brief; wiring code from an integration doc, and doc edits that need writing or reading code → sonnet-worker  (2026-11-02, changed 2026-11-05)
+- test-suite runs whose results need interpreting → sonnet-worker, not haiku-worker  (2026-11-05)
+- don't hold back work that only partly conflicts with a running worker: start the safe part now, list the rest for after it  (2026-11-02)
+- /graphify --update with changed docs/images needs sub-agent dispatch → Opus orchestrates (haiku-worker can't); code-only updates can stay on haiku-worker  (2026-11-03)
+- read-only debugging checks (folder listings, process lists, event logs) → haiku-scout; mechanical plan-file edits with an exact spec → haiku-worker  (2026-11-05)

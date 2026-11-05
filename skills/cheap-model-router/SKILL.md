@@ -65,6 +65,11 @@ On every turn that did a task, make the **last line of your final message** the 
 - `` `route: opus+sonnet+haiku ✓` ``, split
 - `` `route: 3×haiku ✓` ``, parallel or batch
 
+**When the user asks for a model** (an `!haiku` / `!sonnet` / `!opus` prefix, or in words: "let Sonnet do it", "use a Haiku worker", "do it yourself"), follow it. Before you act, also decide what you would have picked on your own, honestly, and add both to the route line: `` `route: sonnet ✓ · asked sonnet · auto opus` ``.
+- **Asked = auto:** you'd have done the same, so it isn't an override and nothing is learned.
+- **Asked ≠ auto:** that's a real override, meaning your automatic routing was wrong for this kind of task. If it points to a general pattern (a task type, not a one-off), add a `route-feedback:` rule for it. `/route-stats` lists all real overrides, so repeated ones stand out.
+- A prompt that only *talks about* a model or the router (e.g. "make the Sonnet worker high effort") is not a request: no asked/auto.
+
 When the user corrects a routing choice ("that could've gone to Haiku", "do this kind yourself", or they used an override because you routed wrong), add a line right above the route line:
 `` `route-feedback: <short general rule, e.g. "regex-heavy edits → sonnet, not haiku">` ``
 The hook saves it to the learned rules, and they're loaded every session.

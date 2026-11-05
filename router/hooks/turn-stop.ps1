@@ -25,6 +25,13 @@ try {
     $route = $routes[$routes.Count - 1].Groups[1].Value.Trim()
     $lower = $route.ToLower()
 
+    # "asked X" = the user requested model X for this task; "auto Y" = what Opus would have picked on its own.
+    # Only a request that differs from the automatic pick is a real override (a correction worth learning from).
+    $asked = ([regex]::Match($lower, '\basked\s*:?\s*(haiku|sonnet|opus)')).Groups[1].Value
+    $auto = ([regex]::Match($lower, '\bauto\s*:?\s*(haiku|sonnet|opus)')).Groups[1].Value
+    $override = [bool]($asked -and $auto -and $asked -ne $auto)
+    $lower = [regex]::Replace($lower, '\b(asked|auto)\s*:?\s*(haiku|sonnet|opus)', '')
+
     $models = @([regex]::Matches($lower, 'haiku|sonnet|opus') | ForEach-Object { $_.Value } | Select-Object -Unique)
     # Escalation: a cross mark after a cheap model, "haiku x ->" in plain ASCII, or the word "fail".
     $cross = [string][char]0x2717 + [char]0x2718 + [char]0x274C
@@ -45,6 +52,7 @@ try {
         ev = 'turn'; session = $hook.session_id; prompt_id = $hook.prompt_id; route = $route
         models = $models; primary = $primary; escalated = [bool]$escalated; finished_by_opus = [bool]$finished; escalated_from = $from
         turn_cost = [math]::Round($turn.cost, 5); turn_tokens = $turn.tokens; turn_model = $turn.model
+        asked = $asked; auto = $auto; override = $override
     }
 } catch {
     [Console]::Error.WriteLine("cheap-model-router turn-stop: $_")

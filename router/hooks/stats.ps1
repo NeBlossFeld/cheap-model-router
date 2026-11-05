@@ -88,8 +88,29 @@ foreach ($g in $workers | Group-Object { "$($_.family)|$($_.type)" } | Sort-Obje
 }
 }
 
-$out.Add("`n### Overrides ($($overrides.Count))")
+$out.Add("`n### Prefix commands ($($overrides.Count))")
 if ($overrides.Count -gt 0) { $out.Add((($overrides | Group-Object kind | ForEach-Object { "!$($_.Name): $($_.Count)" }) -join ' / ')) }
+
+# Turns where the user asked for a model. Only asked != auto is a real override.
+$asked = @($turns | Where-Object { $_.asked })
+$out.Add("`n### Your model requests ($($asked.Count))")
+if ($asked.Count -eq 0) { $out.Add('None logged yet.') }
+else {
+    $real = @($asked | Where-Object { $_.override })
+    $agreed = @($asked | Where-Object { $_.auto -and -not $_.override }).Count
+    $noAuto = @($asked | Where-Object { -not $_.auto }).Count
+    $out.Add("Same as Opus would have picked: $agreed / real overrides: $($real.Count) / auto pick unknown: $noAuto")
+    if ($real.Count -gt 0) {
+        $typesByPrompt = @{}
+        foreach ($w in $workers) { if ($w.prompt_id) { $typesByPrompt[$w.prompt_id] = $w.type } }
+        $out.Add('| Opus picked | You asked | Task type | Times |'); $out.Add('|---|---|---|---|')
+        foreach ($g in $real | Group-Object { "$($_.auto)|$($_.asked)|$(if ($typesByPrompt.ContainsKey($_.prompt_id)) { $typesByPrompt[$_.prompt_id] } else { '-' })" } | Sort-Object Count -Descending) {
+            $p = $g.Name.Split('|')
+            $out.Add("| $($p[0]) | $($p[1]) | $($p[2]) | $($g.Count) |")
+        }
+        $out.Add('Patterns that repeat (2+ times) are good candidates for a learned rule.')
+    }
+}
 
 $ruleCount = 0
 if (Test-Path $script:FeedbackPath) { $ruleCount = @([System.IO.File]::ReadAllLines($script:FeedbackPath, $script:Utf8) | Where-Object { $_ -match '^\s*-\s+' }).Count }

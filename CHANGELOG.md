@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.1.0 (2026-11-05)
+
+### Your model requests vs the router's own picks
+- When you ask for a model (`!sonnet`, or in words: "let Sonnet do it", "do it yourself"), Opus follows it and also records what it would have picked on its own: `route: sonnet ✓ · asked sonnet · auto opus`.
+- Asked = auto is not counted as an override. Asked ≠ auto is a real override, a signal that the automatic routing was wrong for that kind of task, and Opus adds a learned rule when it points to a general pattern.
+- Prompts that only talk about a model or the router are not treated as requests.
+- `/route-stats` has a new "Your model requests" section: how many matched the router's pick, plus a table of real overrides by task type.
+- "Overrides" in `/route-stats` is renamed "Prefix commands".
+
+### Rules
+- The build-list rule now sends wiring code from an integration doc, and doc edits that need writing or reading code, to sonnet-worker (Haiku kept failing on them).
+- New: test-suite runs whose results need interpreting go to sonnet-worker.
+- 3 more rules learned from use (see below).
+
 ## 1.0.0 (2026-11-02)
 
 First public release, after a month of daily use.
@@ -43,3 +57,9 @@ Rules learned from corrections are appended below. To record new ones automatica
 - 2026-10-23: learned rule: /graphify --update (scripted incremental runs) → haiku-worker; full /graphify builds (community naming) → sonnet-worker, not opus
 - 2026-10-23: learned rule: lookups that need judgment across several sources → sonnet-worker; haiku-scout only for single-page extraction, reading known files, and gathering sources without judging them. In a research split, write haiku-scout's DONE WHEN as "sources gathered and extracted", so gathering alone counts as done
 - 2026-10-31: learned rule: fake test-data/fixture generators with an exact spec and a substring-check done condition → haiku-worker, not sonnet
+- 2026-11-02: learned rule: small build-list items (popups, CSS fixes, wiring from an integration doc, renames, status updates) → haiku-worker, one item per brief, not sonnet
+- 2026-11-02: learned rule: don't hold back work that only partly conflicts with a running worker: start the safe part now, list the rest for after it
+- 2026-11-03: learned rule: /graphify --update with changed docs/images needs sub-agent dispatch → Opus orchestrates (haiku-worker can't); code-only updates can stay on haiku-worker
+- 2026-11-05: learned rule: read-only debugging checks (folder listings, process lists, event logs) → haiku-scout; mechanical plan-file edits with an exact spec → haiku-worker
+- 2026-11-05: changed rule: small build-list items with an exact spec → haiku-worker; wiring code from an integration doc, and doc edits that need writing or reading code → sonnet-worker (replaces the 2026-11-02 build-list rule)
+- 2026-11-05: learned rule: test-suite runs whose results need interpreting → sonnet-worker, not haiku-worker
