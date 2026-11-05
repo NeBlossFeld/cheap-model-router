@@ -55,7 +55,7 @@ Every worker ends with a fixed report (`STATUS`, `CONFIDENCE`, `PARTIAL-WHY`, `U
 **Option A, the script.** Clone the repo:
 
 ```
-git clone https://github.com/NeBlossFeld/cheap-model-route.git
+git clone https://github.com/NeBlossFeld/cheap-model-router.git
 ```
 
 Then, from the repo folder:
