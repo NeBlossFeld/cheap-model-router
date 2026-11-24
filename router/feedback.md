@@ -14,3 +14,5 @@
 - don't hold back work that only partly conflicts with a running worker: start the safe part now, list the rest for after it  (2026-11-02)
 - /graphify --update with changed docs/images needs sub-agent dispatch → Opus orchestrates (haiku-worker can't); code-only updates can stay on haiku-worker  (2026-11-03)
 - read-only debugging checks (folder listings, process lists, event logs) → haiku-scout; mechanical plan-file edits with an exact spec → haiku-worker  (2026-11-05)
+- graphify semantic-extraction agents (general-purpose type) → set model sonnet; Opus only orchestrates  (2026-11-06)
+- research → haiku-scout by default; using sonnet-worker for research needs the user's OK each time (ask first, one approval = one task only)  (2026-11-07)

@@ -34,25 +34,36 @@ $out.Add("| escalated to opus | $($esc.Count) | $(Pct $esc.Count $turns.Count) |
 $out.Add("`n### Worker runs ($($workers.Count))")
 if ($workers.Count -eq 0) { $out.Add('None yet. Every task so far stayed with Opus.') }
 else {
-$out.Add('| Agent | Runs | Done | Partial/failed | Unknown | High confidence | Tokens (in+out) | Cost | Opus would cost | Saved |')
-$out.Add('|---|---|---|---|---|---|---|---|---|---|')
+# A failure is a run that failed, a result the worker itself calls wrong, or a turn Opus had to redo.
+# A partial that is only incomplete or blocked is not a failure: its work was kept.
+$escalatedPrompts = @{}
+foreach ($t in $esc) { $escalatedPrompts[$t.prompt_id] = $true }
+function Test-Failure($w) { return ($w.status -eq 'failed' -or $w.partial_why -eq 'wrong' -or $escalatedPrompts.ContainsKey($w.prompt_id)) }
+function Test-Partial($w) { return ($w.status -eq 'partial' -and -not (Test-Failure $w)) }
+
+$out.Add('| Agent | Runs | Done | Partial | Failed | Unknown | High confidence | Tokens (in+out) | Cost | Opus would cost | Saved |')
+$out.Add('|---|---|---|---|---|---|---|---|---|---|---|')
 foreach ($g in $workers | Group-Object agent | Sort-Object Name) {
     $runs = @($g.Group)
-    $done = @($runs | Where-Object { $_.status -eq 'done' }).Count
-    $bad = @($runs | Where-Object { $_.status -in 'partial', 'failed' }).Count
-    $unknown = @($runs | Where-Object { $_.status -notin 'done', 'partial', 'failed' }).Count
+    $done = @($runs | Where-Object { $_.status -eq 'done' -and -not (Test-Failure $_) }).Count
+    $part = @($runs | Where-Object { Test-Partial $_ }).Count
+    $bad = @($runs | Where-Object { Test-Failure $_ }).Count
+    $unknown = @($runs | Where-Object { $_.status -notin 'done', 'partial', 'failed' -and -not (Test-Failure $_) }).Count
     $known = @($runs | Where-Object { $_.confidence -in 'high', 'low' }).Count
     $high = @($runs | Where-Object { $_.confidence -eq 'high' }).Count
     $tok = ($runs | ForEach-Object { $_.tokens.input + $_.tokens.cache_write + $_.tokens.cache_read + $_.tokens.output } | Measure-Object -Sum).Sum
     $cost = ($runs | Measure-Object -Property cost -Sum).Sum
     $opus = ($runs | Measure-Object -Property opus_cost -Sum).Sum
-    $out.Add(("| {0} | {1} | {2} | {3} | {4} | {5} | {6:N0} | `${7:N3} | `${8:N3} | `${9:N3} |" -f $g.Name, $runs.Count, $done, $bad, $unknown, (Pct $high $known), $tok, $cost, $opus, ($opus - $cost)))
+    $out.Add(("| {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7:N0} | `${8:N3} | `${9:N3} | `${10:N3} |" -f $g.Name, $runs.Count, $done, $part, $bad, $unknown, (Pct $high $known), $tok, $cost, $opus, ($opus - $cost)))
 }
 $partials = @($workers | Where-Object { $_.status -in 'partial', 'failed' })
 if ($partials.Count -gt 0) {
     $why = $partials | Group-Object { if ($_.partial_why) { $_.partial_why } else { 'not given' } } | ForEach-Object { "$($_.Name): $($_.Count)" }
     $out.Add("`nWhy partial/failed: " + ($why -join ' / '))
 }
+$finishedIds = @{}; foreach ($t in $fin) { $finishedIds[$t.prompt_id] = $true }
+$finishedRuns = @($workers | Where-Object { (Test-Partial $_) -and $finishedIds.ContainsKey($_.prompt_id) }).Count
+$out.Add("Partials whose turn Opus had to finish: $finishedRuns of $(@($workers | Where-Object { Test-Partial $_ }).Count). Failed = failed, self-reported wrong, or redone by Opus.")
 
 $totalSaved = [double]($workers | Measure-Object -Property saved -Sum).Sum
 $out.Add(("`n**Gross savings: `${0:N2}** (worker tokens priced at Opus vs the worker's model; a rough upper estimate)." -f $totalSaved))
@@ -76,16 +87,33 @@ if ($measured.Count -gt 0 -and $kept.Count -gt 0) {
 }
 
 $out.Add("`n### By task type")
-$out.Add('| Model | Type | Runs | Failed/escalated | Unknown |'); $out.Add('|---|---|---|---|---|')
-$escalatedPrompts = @{}
-foreach ($t in $esc) { $escalatedPrompts[$t.prompt_id] = $true }
+$out.Add('| Model | Type | Runs | Partial | Failed | Unknown |'); $out.Add('|---|---|---|---|---|---|')
 foreach ($g in $workers | Group-Object { "$($_.family)|$($_.type)" } | Sort-Object Name) {
     $runs = @($g.Group)
-    $bad = @($runs | Where-Object { $_.status -in 'partial', 'failed' -or $escalatedPrompts.ContainsKey($_.prompt_id) }).Count
-    $unknown = @($runs | Where-Object { $_.status -notin 'done', 'partial', 'failed' -and -not $escalatedPrompts.ContainsKey($_.prompt_id) }).Count
+    $part = @($runs | Where-Object { Test-Partial $_ }).Count
+    $bad = @($runs | Where-Object { Test-Failure $_ }).Count
+    $unknown = @($runs | Where-Object { $_.status -notin 'done', 'partial', 'failed' -and -not (Test-Failure $_) }).Count
     $known = $runs.Count - $unknown
-    $out.Add("| $($runs[0].family) | $($runs[0].type) | $($runs.Count) | $bad ($(Pct $bad $known)) | $unknown |")
+    $out.Add("| $($runs[0].family) | $($runs[0].type) | $($runs.Count) | $part | $bad ($(Pct $bad $known)) | $unknown |")
 }
+}
+
+# Graph use: only runs logged since graph counting exists (they carry graph_queries).
+$tracked = @($workers | Where-Object { $null -ne $_.graph_queries -and $_.agent -ne 'haiku-scout' })
+$out.Add("`n### Graph use ($($tracked.Count) worker runs tracked)")
+if ($tracked.Count -eq 0) { $out.Add('No tracked runs yet. Counting started with the graph-query feature.') }
+else {
+    $out.Add('| Runs | Count | Done | Failed | Avg tokens | Avg cost |'); $out.Add('|---|---|---|---|---|---|')
+    foreach ($set in @(@{ n = 'with graph query'; r = @($tracked | Where-Object { $_.graph_queries -gt 0 }) }, @{ n = 'without'; r = @($tracked | Where-Object { $_.graph_queries -eq 0 }) })) {
+        $r = $set.r
+        if ($r.Count -eq 0) { $out.Add("| $($set.n) | 0 | - | - | - | - |"); continue }
+        $d = @($r | Where-Object { $_.status -eq 'done' -and -not (Test-Failure $_) }).Count
+        $f = @($r | Where-Object { Test-Failure $_ }).Count
+        $tok = ($r | ForEach-Object { $_.tokens.input + $_.tokens.cache_write + $_.tokens.cache_read + $_.tokens.output } | Measure-Object -Average).Average
+        $cst = ($r | Measure-Object -Property cost -Average).Average
+        $out.Add(("| {0} | {1} | {2} | {3} | {4:N0} | `${5:N3} |" -f $set.n, $r.Count, $d, $f, $tok, $cst))
+    }
+    $out.Add('Different task mixes make this a rough comparison; it gets meaningful after ~20 runs each.')
 }
 
 $out.Add("`n### Prefix commands ($($overrides.Count))")

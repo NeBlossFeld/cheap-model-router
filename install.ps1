@@ -25,7 +25,8 @@ $code = @(
     'skills/cheap-model-router/SKILL.md', 'skills/route-stats/SKILL.md',
     'router/hooks/common.ps1', 'router/hooks/session-start.ps1', 'router/hooks/prompt-submit.ps1',
     'router/hooks/pre-agent.ps1', 'router/hooks/worker-guard.ps1', 'router/hooks/luau-guard.ps1',
-    'router/hooks/subagent-stop.ps1', 'router/hooks/turn-stop.ps1', 'router/hooks/stats.ps1'
+    'router/hooks/subagent-stop.ps1', 'router/hooks/turn-stop.ps1', 'router/hooks/stats.ps1',
+    'router/hooks/subagent-start.ps1', 'router/hooks/graph-guard.ps1'
 )
 if (-not $NoRoblox) { $code += 'agents/roblox-worker.md' }
 

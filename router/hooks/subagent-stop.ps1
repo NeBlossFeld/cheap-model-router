@@ -14,7 +14,7 @@ try {
         ev = 'worker'; session = $hook.session_id; prompt_id = $hook.prompt_id; agent_id = $hook.agent_id
         agent = $hook.agent_type; family = $family; model = $t.model; task = $t.task; type = $(if ($t.type) { $t.type } else { 'unknown' })
         status = $report.status; confidence = $report.confidence; partial_why = $report.partial_why
-        tokens = $t.usage
+        tokens = $t.usage; graph_queries = $t.graph_queries
         cost = [math]::Round($t.cost, 5); opus_cost = [math]::Round($t.opus_cost, 5); saved = [math]::Round($t.opus_cost - $t.cost, 5)
     }
 } catch {

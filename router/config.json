@@ -37,5 +37,10 @@
                       "min_tasks":  3,
                       "fail_rate":  0.4
                   },
+    "graph_workers":  [
+                          "haiku-worker",
+                          "sonnet-worker",
+                          "roblox-worker"
+                      ],
     "changelog_path":  ""
 }

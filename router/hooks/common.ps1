@@ -82,7 +82,7 @@ function Test-NoRoute([string]$sessionId) {
 # Reads a worker's transcript: brief fields, model, deduplicated usage with costs, and its report texts.
 # Background workers hand their report back through the SubagentHandback tool, not as a final reply.
 function Read-WorkerTranscript([string]$path, $config) {
-    $r = @{ task = ''; type = ''; model = ''; cost = 0.0; opus_cost = 0.0; handback = ''; last_text = ''
+    $r = @{ task = ''; type = ''; model = ''; cost = 0.0; opus_cost = 0.0; handback = ''; last_text = ''; graph_queries = 0
             usage = @{ input = 0.0; cache_write = 0.0; cache_read = 0.0; output = 0.0 } }
     if ($path.StartsWith('~')) { $path = $script:UserHome + $path.Substring(1) }
     if (-not $path -or -not (Test-Path $path)) { return $r }
@@ -102,6 +102,7 @@ function Read-WorkerTranscript([string]$path, $config) {
         foreach ($block in @($e.message.content)) {
             if ($block.type -eq 'text' -and $block.text) { $r.last_text = [string]$block.text }
             if ($block.type -eq 'tool_use' -and $block.name -eq 'SubagentHandback' -and $block.input.message) { $r.handback = [string]$block.input.message }
+            if ($block.type -eq 'tool_use' -and $block.name -in 'Bash', 'PowerShell' -and [string]$block.input.command -match '\bgraphify(\.exe)?"?\s+(query|path|explain)\b') { $r.graph_queries++ }
         }
 
         if ($e.message.usage) {

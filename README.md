@@ -4,7 +4,7 @@ Keep Opus as your main model, but stop paying Opus prices for easy work.
 
 Before every task, Opus decides whether to do it itself or hand it to a cheaper worker: **Haiku** for lookups and mechanical edits, **Sonnet** for standard coding. It checks the worker's result by how confident the worker says it is, logs every route, and learns from your corrections.
 
-> In its first month of real use: 144 worker runs, $64 gross / $18 net estimated savings, and only 1% of turns escalated back to Opus.
+> After a month of real use: 473 worker runs, $298 gross / $124 net estimated savings, and only 1% of turns escalated back to Opus.
 
 ## How it decides
 
@@ -28,27 +28,32 @@ You see each decision as a line like `→ Haiku · rename vars in 3 files`, and 
 | `haiku-scout` | Haiku | read, search, web | search, lookup, summaries |
 | `haiku-worker` | Haiku (medium effort) | edit, run commands | mechanical edits, formatting, boilerplate, known commands |
 | `sonnet-worker` | Sonnet | edit, run, web | code, bug fixes, tests, docs, research |
-| `roblox-worker` *(optional)* | Sonnet (high effort) | Roblox Studio MCP: scripts, game tree, Luau, console, play tests | Roblox scripting and testing |
+| `roblox-worker` *(optional)* | Sonnet (high effort, 70 turns) | Roblox Studio MCP: scripts, game tree, Luau, console, play tests; shell for graphify queries only | Roblox scripting and testing |
 
 Every worker ends with a fixed report (`STATUS`, `CONFIDENCE`, `PARTIAL-WHY`, `UNSURE`, `CHANGED`, `NEEDS-OPUS`). Opus does a light check on high-confidence results and a focused check on the points flagged as uncertain. It only redoes work that's wrong at its core, and never sends a failed task to another cheap model.
+
+### Graph-aware workers (optional, needs the graphify CLI)
+
+If the project has a graphify knowledge graph (`graphify-out/graph.json` in the project folder or up to 3 folders above it) and the `graphify` command is installed, `haiku-worker`, `sonnet-worker` and `roblox-worker` are told when they start to try `graphify query "<question>" --budget 1500` first. They use it as a map to find the right files, then read the real file before editing, since the graph can be out of date. `haiku-scout` doesn't get the hint. Without a graph, nothing changes.
 
 ## Safety
 
 - **Workers can't delete files, push, publish, send messages or change system settings.** A PowerShell hook blocks those commands, and the worker lists them under `NEEDS-OPUS` for Opus to handle (with your confirmation when it matters).
-- **`roblox-worker` has its own Luau guard.** Its `execute_luau` calls can't destroy instances, write data stores, use the network or publish, and it has no asset upload, insert or generation tools.
+- **`roblox-worker` has its own Luau guard.** Its `execute_luau` calls can't destroy instances, write data stores, use the network or publish, and it has no asset upload, insert or generation tools. Its shell runs only single `graphify query` / `path` / `explain` commands, with no chaining or redirection.
 - **Worker briefs must follow a template** (TASK, TYPE, DONE WHEN). A hook rejects briefs that don't.
 
 ## Stats and learning
 
-- **`/route-stats [days]`** shows the share of work per model, partials and escalations, failures per task type, tokens, and both gross and net estimated savings. Net savings subtract the extra Opus cost of briefing and checking. It also lists your model requests and which of them were real overrides.
-- **Learned rules:** when you correct a routing choice, Opus writes a `route-feedback:` line and a hook saves it to `~/.claude/router/feedback.md`. That file is loaded at every session start. The repo ships with 14 rules learned during real use.
+- **`/route-stats [days]`** shows the share of work per model, partials and escalations, failures per task type, tokens, and both gross and net estimated savings. Net savings subtract the extra Opus cost of briefing and checking. It also lists your model requests and which of them were real overrides, and compares worker runs with and without a graph query.
+- **Partial isn't failure.** Workers often mark research "incomplete" even when the result is useful, so the stats count only failed runs, results the worker itself calls wrong, and work Opus had to redo as failures. Partials have their own column.
+- **Learned rules:** when you correct a routing choice, Opus writes a `route-feedback:` line and a hook saves it to `~/.claude/router/feedback.md`. That file is loaded at every session start. The repo ships with 16 rules learned during real use (listed in `CHANGELOG.md`). Edit or delete any that don't fit you.
 - **Changelog of rules:** set `changelog_path` in `~/.claude/router/config.json` to a `CHANGELOG.md` (e.g. this repo's), and every newly learned rule is appended to it.
 
 ## Requirements
 
 - **Windows with Windows PowerShell 5.1** (built in). The hooks are PowerShell scripts. On macOS or Linux, install PowerShell 7 (`pwsh`) and change `powershell.exe` to `pwsh` in the hook commands, or ask Claude to port the scripts.
 - **A recent Claude Code** that supports `command` + `args` hooks and agent `effort` / `maxTurns`.
-- **Optional:** the Roblox Studio MCP for `roblox-worker`.
+- **Optional:** the Roblox Studio MCP for `roblox-worker`, and the `graphify` CLI for graph-aware workers.
 
 ## Install
 

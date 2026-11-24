@@ -90,6 +90,24 @@
                                                  }
                                              ]
                                }
-                           ]
+                           ],
+                  "SubagentStart":  [
+                                        {
+                                            "hooks":  [
+                                                          {
+                                                              "type":  "command",
+                                                              "command":  "powershell.exe",
+                                                              "args":  [
+                                                                           "-NoProfile",
+                                                                           "-ExecutionPolicy",
+                                                                           "Bypass",
+                                                                           "-File",
+                                                                           "{{CLAUDE_HOME}}/router/hooks/subagent-start.ps1"
+                                                                       ],
+                                                              "timeout":  10
+                                                          }
+                                                      ]
+                                        }
+                                    ]
               }
 }

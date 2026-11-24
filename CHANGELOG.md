@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.0 (2026-11-24)
+
+### Graph-aware workers
+- A new SubagentStart hook tells `haiku-worker`, `sonnet-worker` and `roblox-worker` to try `graphify query` first when the project has a graphify graph and the CLI is installed. `haiku-scout` doesn't get the hint. The worker list is `graph_workers` in `router/config.json`.
+- `roblox-worker` gets a shell limited to single `graphify query` / `path` / `explain` commands (new `graph-guard.ps1`).
+- The log records graph queries per run. `/route-stats` has a new "Graph use" section comparing runs with and without a query.
+
+### Honest stats
+- Failures now count only failed runs, results the worker itself calls wrong, and work Opus had to redo. Partials (incomplete or blocked, work kept) get their own column, plus a line showing how many partials Opus had to finish. Before, Haiku research looked 92% failed; it's actually 0%.
+
+### Fixes
+- The installer copies the two new hook scripts.
+- The repo's hook settings contain only the router's own hooks.
+
+### Rules
+- 2 new rules learned from use (see below), 16 in total.
+
 ## 1.1.0 (2026-11-05)
 
 ### Your model requests vs the router's own picks
@@ -63,3 +80,5 @@ Rules learned from corrections are appended below. To record new ones automatica
 - 2026-11-05: learned rule: read-only debugging checks (folder listings, process lists, event logs) → haiku-scout; mechanical plan-file edits with an exact spec → haiku-worker
 - 2026-11-05: changed rule: small build-list items with an exact spec → haiku-worker; wiring code from an integration doc, and doc edits that need writing or reading code → sonnet-worker (replaces the 2026-11-02 build-list rule)
 - 2026-11-05: learned rule: test-suite runs whose results need interpreting → sonnet-worker, not haiku-worker
+- 2026-11-06: learned rule: graphify semantic-extraction agents (general-purpose type) → set model sonnet; Opus only orchestrates
+- 2026-11-07: learned rule: research → haiku-scout by default; using sonnet-worker for research needs the user's OK each time (ask first, one approval = one task only)
